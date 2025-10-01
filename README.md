@@ -1,161 +1,110 @@
-# Officient API Client (TypeScript)
+# Officient MCP Server
 
-This directory contains a fully typed TypeScript client for the Officient API.
+A Model Context Protocol (MCP) server for the [Officient](https://www.officient.io/) API, providing seamless integration with Claude and other MCP-compatible clients.
 
-## Structure
+## Features
 
-```
-api/
-├── config.ts                 # API configuration and authentication
-├── index.ts                  # Main export file
-├── types/                    # TypeScript type definitions
-│   ├── budgets.types.ts     # Budget-related types
-│   ├── daysoff.types.ts     # Days off types
-│   ├── employee.types.ts    # Employee types
-│   ├── files.types.ts       # File types
-│   ├── people.types.ts      # People/person types
-│   └── index.ts             # Type exports
-├── services/                 # API service functions
-│   ├── budgets.service.ts   # Budget operations
-│   ├── daysoff.service.ts   # Days off operations
-│   ├── employee.service.ts  # Employee operations
-│   ├── files.service.ts     # File operations
-│   ├── people.service.ts    # People operations
-│   └── index.ts             # Service exports
-└── utils/                    # Utility functions
-    └── http-client.ts       # HTTP client wrapper
+This MCP server exposes 9 tools for interacting with the Officient API:
+
+- **list_people** - Get a paginated list of people
+- **list_all_people** - Get all people with automatic pagination
+- **get_person_detail** - Get detailed information about a specific person
+- **get_employee_details** - Get details of the current logged-in employee
+- **list_coworkers_days_off** - Get coworkers' days off for a specific month
+- **list_own_days_off** - Get your own days off for a specific year
+- **get_all_salary_slips** - Get all salary slip files
+- **get_file_download_url** - Get download URL for a file (e.g., salary slip PDF)
+- **get_vacation_day_budgets** - Get vacation day budgets for a specific year
+
+## Installation
+
+1. Clone this repository:
+```bash
+git clone https://github.com/bitterpanda63/officient-mcp-server.git
+cd officient-mcp-server
 ```
 
-## Usage
-
-### Import everything
-
-```typescript
-import * as Officient from './api';
-
-// Use services
-const people = await Officient.listAllPeople();
-const employee = await Officient.getEmployeeDetails();
+2. Install dependencies:
+```bash
+npm install
 ```
 
-### Import specific services
-
-```typescript
-import { listPeople, getPersonDetail } from './api/services/people.service';
-import type { Person, PersonDetail } from './api/types/people.types';
-
-const response = await listPeople({ page: 0, perPage: 20 });
-const people: Person[] = response.people;
-
-const detail = await getPersonDetail(12345);
-const person: PersonDetail = detail.person;
+3. Build the TypeScript files:
+```bash
+npm run build
 ```
 
-## Available Services
-
-### People Service
-
-```typescript
-import { listPeople, listAllPeople, getPersonDetail } from './api/services/people.service';
-
-// Get a single page of people
-const page = await listPeople({ page: 0, perPage: 10, searchTerm: 'John' });
-
-// Get all people with automatic pagination
-const allPeople = await listAllPeople({ searchTerm: 'Developer' });
-
-// Get person details
-const personDetail = await getPersonDetail(12345);
-```
-
-### Employee Service
-
-```typescript
-import { getEmployeeDetails } from './api/services/employee.service';
-
-// Get current logged-in employee details
-const employee = await getEmployeeDetails();
-```
-
-### Days Off Service
-
-```typescript
-import { listCoworkersDaysOff, listOwnDaysOff } from './api/services/daysoff.service';
-
-// Get coworkers' days off for October 2025
-const coworkersDaysOff = await listCoworkersDaysOff(2025, 10);
-
-// Get own days off for 2025
-const myDaysOff = await listOwnDaysOff(2025);
-```
-
-### Files Service
-
-```typescript
-import { getAllSalarySlips, getFileDownloadUrl } from './api/services/files.service';
-
-// Get all salary slips
-const salarySlips = await getAllSalarySlips();
-
-// Get download URL for a specific file
-const downloadUrl = await getFileDownloadUrl(16945305);
-console.log(downloadUrl.download_url);
-```
-
-### Budgets Service
-
-```typescript
-import { getVacationDayBudgets } from './api/services/budgets.service';
-
-// Get vacation day budgets for 2025
-const budgets = await getVacationDayBudgets(2025);
+4. Create a `.env` file with your Officient token:
+You can get this officient token by inspecting a request when logged in and copying the bearer from the `Authselfservice` header.
+```bash
+cp .env.example .env
+# Edit .env and add your OFFICIENT_TOKEN
 ```
 
 ## Configuration
 
-Set the `OFFICIENT_TOKEN` environment variable in a `.env` file:
+### Environment Variables
+
+Create a `.env` file in the root directory:
 
 ```env
-OFFICIENT_TOKEN=your_token_here
+OFFICIENT_TOKEN=your_officient_token_here
 ```
 
-## Type Safety
+To get your Officient token:
+1. Log in to your Officient account
+2. Open browser developer tools (F12)
+3. Go to Network tab
+4. Make any request to Officient
+5. Look for the `Authselfservice` header in the request
 
-All API responses are fully typed. TypeScript will provide autocomplete and type checking:
+### MCP Client Configuration
 
-```typescript
-import { listPeople } from './api/services/people.service';
+Add this server to your MCP client configuration (e.g., Claude Desktop):
 
-const response = await listPeople();
-
-// TypeScript knows the structure
-response.people.forEach(person => {
-  console.log(person.name);      // ✓ Valid
-  console.log(person.email);     // ✓ Valid
-  console.log(person.invalid);   // ✗ TypeScript error
-});
-```
-
-## Error Handling
-
-All services throw errors on failed requests:
-
-```typescript
-try {
-  const people = await listPeople();
-} catch (error) {
-  console.error('Failed to fetch people:', error.message);
+```json
+{
+  "mcpServers": {
+    "officient": {
+      "command": "node",
+      "args": [
+        "/path/to/officient-mcp-server/build/index.js"
+      ],
+      "env": {
+        "OFFICIENT_TOKEN": "your_token_here"
+      }
+    }
+  }
 }
 ```
 
-## Development
+## Usage
 
-The TypeScript files are compiled to JavaScript in the `dist` directory:
+### With Claude Desktop
+
+Once configured, you can use natural language to interact with Officient:
+
+- "List all people in my company"
+- "Show me details for person ID 12345"
+- "What are my days off this year?"
+- "Get my salary slips"
+- "Who is on vacation in October 2025?"
+
+
+### Build
 
 ```bash
-# Build TypeScript files
+# Build once
 npm run build
 
-# Watch mode for development
+# Watch mode (development)
 npm run dev
 ```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
