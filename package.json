@@ -16,8 +16,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.18.2",
-    "axios": "^1.12.2",
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "axios": "^1.16.1",
     "dotenv": "^16.6.1"
   },
   "devDependencies": {
